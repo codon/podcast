@@ -5,6 +5,11 @@ use warnings;
 
 use Getopt::Long;
 
+use MP3::ID3v1Tag;
+#use XML::RSS;
+#use MP3::Tag;
+#see source for MP3::Podcast for some usage pointers
+
 use MyPodcasts;
 
 my ($podcast, $list);
@@ -30,12 +35,19 @@ if ( my $pid = fork() ) {
 	sleep( $podcast{'duration'} + 5 ); # Add promo time
 	kill 'INT', $pid;
 	
-	# XXX: This is temporary!
-	rename $podcast{dumpfile}, "podcasts/$podcast{filename}";
+	# use MP3::ID3v1Tag to set Name, source, description, title, artist, etc.
+	my $mp3_file = new MP3::ID3v1Tag($podcast{dumpfile});
+	$mp3_file->set_title($podcast{title});
+	$mp3_file->set_artist($podcast{artist});
+	$mp3_file->set_album($podcast{name});
+	$mp3_file->set_comment($podcast{source});
+	$mp3_file->set_genre('Podcast');
+	$mp3_file->save();
 
-	# TBD: use MP3::ID3v1Tag to set Name, source, description, title, artist, etc.
 	# TBD: need to post dump file to appropriate blog
 	# TBD: remove dumpfile
+	# XXX: This is temporary!
+	rename $podcast{dumpfile}, "podcasts/$podcast{filename}";
 }
 elsif ( defined $pid ) {
 	# child
