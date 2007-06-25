@@ -29,7 +29,7 @@ die "$podcast: invalid podcast\n" unless $podcast{'source'};
 if ( my $pid = fork() ) {
 	# parent
 	my $start_time = time;
-	sleep( $podcast{'duration'} - (time() - $start_time) + 5 ); # Add promo time
+	sleep( $podcast{'duration'} - (time() - $start_time) );
 	kill 'INT', $pid;
 	
 	# use MP3::ID3v1Tag to set Name, source, description, title, artist, etc.
