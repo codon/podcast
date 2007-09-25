@@ -33,11 +33,20 @@ build_feed(    $podcast) if ($feed);
 exit(0);
 
 sub capture_stream {
+	my $podcast = shift;
+
 	if ( my $pid = fork() ) {
 		# parent
 		my $start_time = time;
 		sleep( $podcast{'duration'} - (time() - $start_time) );
 		kill 'INT', $pid;
+
+		# move dump file to appropriate destination
+		mkdir qq|$ENV{HOME}/podcasts/$podcast| unless ( -d qq|$ENV{HOME}/podcasts/$podcast| );
+		link $podcast{'dumpfile'}, $podcast{'destfile'};
+
+		# remove the dump file
+		unlink $podcast{'dumpfile'};
 
 		# use MP3::ID3v1Tag to set Name, source, description, title, artist, etc.
 		MyPodcasts->add_ID3_tag( $podcast );
@@ -57,17 +66,12 @@ sub capture_stream {
 }
 
 sub build_feed {
-	die "cannot build feed for $podcast{'name'}: $podcast{'dumpfile'} does not exist\n"
-			unless (-e $podcast{'dumpfile'});
+	my $podcast = shift;
 
-	# move dump file to appropriate destination
-	mkdir qq|$ENV{HOME}/podcasts/$podcast| unless ( -d qq|$ENV{HOME}/podcasts/$podcast| );
-	link $podcast{'dumpfile'}, qq|$ENV{HOME}/podcasts/$podcast/$podcast{'filename'}|;
+	die "cannot build feed for $podcast{'name'}: $podcast{'dumpfile'} does not exist\n"
+			unless (-e qq|$ENV{HOME}/podcasts/$podcast/$podcast{'filename'}|);
 
 	# update the RSS file
 	MyPodcasts->buildRSS($podcast);
-
-	# remove the dump file
-	unlink $podcast{'dumpfile'};
 }
 
