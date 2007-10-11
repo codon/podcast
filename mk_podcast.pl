@@ -8,13 +8,14 @@ use Time::HiRes qw( time sleep );
 
 use MyPodcasts;
 
-my ($podcast, $capture, $feed, $list) = (undef, 1, 1, undef);
+my ($podcast, $capture, $feed, $list, $daysago) = (undef, 1, 1, undef, 0);
 
 GetOptions(
 	"podcast=s" => \$podcast,
 	"capture!"  => \$capture,
 	"feed!"     => \$feed,
 	"list"      => \$list,
+	"daysago=i" => \$daysago,
 );
 
 if ( $list ) {
@@ -23,7 +24,7 @@ if ( $list ) {
 }
 
 # look up podcast in MyPodcasts
-my %podcast = ($podcast) ? MyPodcasts->getConfig( $podcast ) : ();
+my %podcast = ($podcast) ? MyPodcasts->getConfig( $podcast, $daysago ) : ();
 
 die "$podcast: invalid podcast\n" unless $podcast{'source'};
 
