@@ -50,7 +50,7 @@ sub capture_stream {
 		unlink $podcast{'dumpfile'};
 
 		# use MP3::ID3v1Tag to set Name, source, description, title, artist, etc.
-		MyPodcasts->add_ID3_tag( $podcast );
+		MyPodcasts->add_ID3_tag( $podcast, $daysago );
 	}
 	elsif ( defined $pid ) {
 		# child
@@ -73,6 +73,6 @@ sub build_feed {
 			unless (-e qq|$ENV{HOME}/podcasts/$podcast/$podcast{'filename'}|);
 
 	# update the RSS file
-	MyPodcasts->buildRSS($podcast);
+	MyPodcasts->buildRSS($podcast, $daysago);
 }
 
