@@ -87,7 +87,8 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 			version  => '2.0',
 		);
 
-		if ( -e $config{'rss_file'} ) {
+		if ( -e $config{'rss_file'} and -s $config{'rss_file'} > 0 ) {
+			link( $config{'rss_file'}, "$config{'rss_file'}.bak" );
 			$rss->parsefile($config{'rss_file'});
 			if (@{$rss->{'items'}} == 5) {
 				my $last_item = pop(@{$rss->{'items'}});
@@ -96,7 +97,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 				unlink "$ENV{HOME}/$url" if ($url);
 			}
 		}
-		else {
+		unless( $rss->channel ) {
 			$rss->channel(
 				title          => $config{'name'},
 				link           => $config{'home_page'},
@@ -127,7 +128,16 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 			die "$config{'home_page'} has not been updated\n";
 		}
 
-		$rss->save($config{'rss_file'});
+		eval {
+			$rss->save($config{'rss_file'});
+		};
+
+		if ($@) {
+			rename( "$config{'rss_file'}.bak", $config{'rss_file'} );
+		}
+		else {
+			unlink( "$config{'rss_file'}.bak" );
+		}
 
 		return;
 	}
