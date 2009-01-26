@@ -8,7 +8,7 @@ use Time::HiRes qw( time sleep );
 
 use MyPodcasts;
 
-my ($podcast, $capture, $feed, $list, $daysago) = (undef, 1, 1, undef, 0);
+my ($podcast, $capture, $feed, $list, $daysago, $help) = (undef, 1, 1, undef, 0, 0);
 
 GetOptions(
 	"podcast=s" => \$podcast,
@@ -16,6 +16,7 @@ GetOptions(
 	"feed!"     => \$feed,
 	"list"      => \$list,
 	"daysago=i" => \$daysago,
+	"help"      => \$help,
 );
 
 if ( $list ) {
@@ -26,7 +27,10 @@ if ( $list ) {
 # look up podcast in MyPodcasts
 my %podcast = ($podcast) ? MyPodcasts->getConfig( $podcast, $daysago ) : ();
 
-die "$podcast: invalid podcast\n" unless $podcast{'source'};
+if ( $help || !$podcast{'source'} ) {
+	warn "$podcast: invalid podcast\n" unless $podcast{'source'};
+	die usage();
+}
 
 capture_stream($podcast) if ($capture);
 build_feed(    $podcast) if ($feed);
@@ -76,3 +80,13 @@ sub build_feed {
 	MyPodcasts->buildRSS($podcast, $daysago);
 }
 
+sub usage {
+	return qq{
+		--podcast=<string>       Specify a podcast
+		--nocapture              Do not capture the stream
+		--nofeed                 Do not build the RSS feed
+		--list                   List all known podcasts
+		--daysago=n              Look for media file N days ago
+		--help                   Print this usage
+	\n};
+}
