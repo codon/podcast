@@ -13,14 +13,21 @@ use constant 'HRS'  => 60 * 60     ; # seconds in an hour
 use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 
 {
-	my $conf_file = "$ENV{HOME}/.myPodcasts";
+	( my $conf_dir = __FILE__ ) =~ s/\.pm$//;
 	my $config = {};
 	eval {
-		if ( -f $conf_file && -r $conf_file ) {
-			$config = do $conf_file;
-		}
-		if ( defined $config and not ( ref($config) eq 'HASH' ) ) {
-			die "$config did not return a hash reference\n";
+		if ( -d $conf_dir && -r $conf_dir ) {
+			opendir my $dir, $conf_dir or die "cannot open $conf_dir: $!\n";
+			for $file ( grep { -f "$conf_dir/$_" } readdir $dir ) {
+				my $tmp_config = do "$conf_dir/$file";
+
+				if ( defined $tmp_config and not ( ref($tmp_config) eq 'HASH' ) ) {
+					warn "$conf_dir/$file: invalid podcast file\n";
+					next;
+				}
+
+				$config{ $file } = $tmp_config;
+			}
 		}
 	};
 	if ($@) {
