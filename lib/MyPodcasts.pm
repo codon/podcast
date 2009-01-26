@@ -18,7 +18,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 	eval {
 		if ( -d $conf_dir && -r $conf_dir ) {
 			opendir my $dir, $conf_dir or die "cannot open $conf_dir: $!\n";
-			for $file ( grep { -f "$conf_dir/$_" } readdir $dir ) {
+			for my $file ( grep { -f "$conf_dir/$_" } readdir $dir ) {
 				my $tmp_config = do "$conf_dir/$file";
 
 				if ( defined $tmp_config and not ( ref($tmp_config) eq 'HASH' ) ) {
@@ -26,7 +26,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 					next;
 				}
 
-				$config{ $file } = $tmp_config;
+				$config->{ $file } = $tmp_config;
 			}
 		}
 	};
