@@ -117,13 +117,11 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 
 		my $size = (stat $config{'destfile'})[7];
 		my %extraction = $config{'extract'}->( $config{'home_page'} );
+		$extraction{'duration'} = _estimate_duration( $size );
 		my $description = delete $extraction{'summary'};
 		$rss->add_item(
 			title       => $extraction{'title'} || $extraction{'subtitle'},
-			itunes      => {
-				%extraction,
-				duration => ( ($size * 8) / (128 * 1024) ),
-			},
+			itunes      => { %extraction },
 			description => $description,
 			enclosure   => {
 				'url'    => sprintf('http://example.com/podcasts/%s/%s',$podcast,$config{'filename'}),
@@ -180,6 +178,14 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		return sprintf('%3s, %d %s %4d %02d:%02d:%02d -0700',
 			$day{$wday}, $mday, $month{++$mon}, ($year + 1900), $hour, $min, $sec );
 	}
+}
+
+sub _estimate_duration {
+	my $size = shift;
+	my $duration = ($size * 8) / (128 * 1024);
+	(my $hours, $duration) = ( ($duration / ( HRS )), ($duration % ( HRS )) );
+	(my $minutes, $duration) = ( ($duration / ( MIN )), ($duration % ( MIN )) );
+	return sprintf( '%02d:%02d:%02d', $hours, $minutes, $duration );
 }
 
 1;
