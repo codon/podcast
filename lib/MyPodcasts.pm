@@ -104,7 +104,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 				unlink "$ENV{HOME}/$url" if ($url);
 			}
 		}
-		unless( $rss->channel ) {
+		else {
 			$rss->channel(
 				title          => $config{'name'},
 				link           => $config{'home_page'},
