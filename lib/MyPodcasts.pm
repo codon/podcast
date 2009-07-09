@@ -145,10 +145,14 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 
 		if ($@) {
 			warn $@;
-			rename( "$config{'rss_file'}.bak", $config{'rss_file'} );
+			if ( -e "$config{'rss_file'}.bak" ) {
+				rename( "$config{'rss_file'}.bak", $config{'rss_file'} );
+			}
 		}
 		else {
-			unlink( "$config{'rss_file'}.bak" );
+			if ( -e "$config{'rss_file'}.bak" ) {
+				unlink( "$config{'rss_file'}.bak" );
+			}
 		}
 
 		return;
