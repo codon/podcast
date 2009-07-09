@@ -118,8 +118,12 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		my $size = (stat $config{'destfile'})[7];
 		my %extraction = $config{'extract'}->( $config{'home_page'} );
 		$rss->add_item(
-			title       => $extraction{'subtitle'},
-			itunes      => { %extraction, duration => ( ($size * 8) / (128 * 1024) ) },
+			title       => $extraction{'title'} || $extraction{'subtitle'},
+			itunes      => {
+				%extraction,
+				duration => ( ($size * 8) / (128 * 1024) ),
+			},
+			description => $extraction{'summary'},
 			enclosure   => {
 				'url'    => sprintf('http://example.com/podcasts/%s/%s',$podcast,$config{'filename'}),
 				'type'   => "audio/mpeg",
