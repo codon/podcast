@@ -144,6 +144,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		};
 
 		if ($@) {
+			warn $@;
 			rename( "$config{'rss_file'}.bak", $config{'rss_file'} );
 		}
 		else {
