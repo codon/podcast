@@ -123,6 +123,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 			title       => $extraction{'title'} || $extraction{'subtitle'},
 			itunes      => { %extraction },
 			description => $description,
+			category    => 'podcasts',
 			enclosure   => {
 				'url'    => sprintf('http://example.com/podcasts/%s/%s',$podcast,$config{'filename'}),
 				'type'   => "audio/mpeg",
