@@ -132,11 +132,13 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 			mode        => 'insert',
 		);
 
-		if (scalar @{ $rss->{'items'} || [] } > 1  and
-			length($rss->{'items'}[0]{'itunes'}{'summary'}) > 0 and
-			$rss->{'items'}[0]{'itunes'}{'summary'} eq $rss->{'items'}[1]{'itunes'}{'summary'}
-		) {
-			die "$config{'home_page'} has not been updated\n";
+		if (scalar @{ $rss->{'items'} || [] } > 1) {
+			my ($thing1,$thing2) = map {
+				$_->{'itunes'}{'summary'} || $_->{'description'} || ''
+			} @$rss->{'items'}[0,1];
+			if ( length($thing1) > 0 and $thing1 eq $thing2) {
+				die "$config{'home_page'} has not been updated\n";
+			}
 		}
 
 		eval {
