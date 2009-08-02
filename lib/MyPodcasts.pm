@@ -134,7 +134,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		if (scalar @{ $rss->{'items'} || [] } > 1) {
 			my ($thing1,$thing2) = map {
 				$_->{'itunes'}{'summary'} || $_->{'description'} || ''
-			} @$rss->{'items'}[0,1];
+			} @{ $rss->{'items'} }[0,1];
 			if ( length($thing1) > 0 and $thing1 eq $thing2) {
 				die "$config{'home_page'} has not been updated\n";
 			}
