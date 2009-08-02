@@ -6,6 +6,12 @@ use warnings;
 use File::Path;
 use Getopt::Long;
 use Time::HiRes qw( time sleep );
+use WWW::Curl::Easy qw(
+	CURLOPT_BUFFERSIZE
+	CURLOPT_TIMEOUT
+	CURLOPT_WRITEDATA
+	CURLOPT_URL
+);
 
 use MyPodcasts;
 
@@ -41,35 +47,33 @@ exit(0);
 sub capture_stream {
 	my $podcast = shift;
 
-	if ( my $pid = fork() ) {
-		# parent
-		my $start_time = time;
-		sleep( $podcast{'duration'} - (time() - $start_time) );
-		kill 'INT', $pid;
-
 	# Ensure the destination dir exists
 	mkpath( qq|$ENV{HOME}/podcasts/$podcast| ) unless ( -d qq|$ENV{HOME}/podcasts/$podcast| );
-		# move dump file to appropriate destination
-		link $podcast{'dumpfile'}, $podcast{'destfile'};
 
-		# remove the dump file
-		unlink $podcast{'dumpfile'};
+	# open the destination file
+	open my $mp3, '>', $podcast{'destfile'} or die "could not open destination file: $!\n";
 
-		# use MP3::ID3v1Tag to set Name, source, description, title, artist, etc.
+	# instatiate and set up the Curl client
+	my $curl = WWW::Curl::Easy->new();
+# 	$curl->setopt(CURLOPT_SILENT,1);
+	$curl->setopt(CURLOPT_BUFFERSIZE,0);
+	$curl->setopt(CURLOPT_TIMEOUT,$podcast{'duration'});
+	$curl->setopt(CURLOPT_WRITEDATA,$mp3);
+	$curl->setopt(CURLOPT_URL,$podcast{'source'});
+
+	# make the call
+	my $rc = $curl->perform();
+
+	if ( 28 == $rc ) { # expect a timeout; this is a continuous stream we're grabbing...
+		# ok
 		MyPodcasts->add_ID3_tag( $podcast, $daysago );
 	}
-	elsif ( defined $pid ) {
-		# child
-		my @cmd = ( qw( /usr/bin/mplayer -really-quiet -msglevel all=-1 -dumpstream -dumpfile ),
-			$podcast{'dumpfile'},
-			$podcast{'source'},
-		);
-		exec( @cmd ) || die "failed to capture stream: $!\n";
-	}
 	else {
-		# error
-		die "Failed to fork(): $!\n";
+		# problems
+		$curl->strerror($rc);
 	}
+
+	return;
 }
 
 sub build_feed {
