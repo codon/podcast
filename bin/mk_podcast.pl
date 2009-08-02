@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 
+use File::Path;
 use Getopt::Long;
 use Time::HiRes qw( time sleep );
 
@@ -46,8 +47,9 @@ sub capture_stream {
 		sleep( $podcast{'duration'} - (time() - $start_time) );
 		kill 'INT', $pid;
 
+	# Ensure the destination dir exists
+	mkpath( qq|$ENV{HOME}/podcasts/$podcast| ) unless ( -d qq|$ENV{HOME}/podcasts/$podcast| );
 		# move dump file to appropriate destination
-		mkdir qq|$ENV{HOME}/podcasts/$podcast| unless ( -d qq|$ENV{HOME}/podcasts/$podcast| );
 		link $podcast{'dumpfile'}, $podcast{'destfile'};
 
 		# remove the dump file
