@@ -3,6 +3,8 @@ package MyPodcasts;
 use strict;
 use warnings;
 
+use File::Copy;
+
 use XML::RSS;
 use MP3::Tag;
 use LWP::Simple;
@@ -94,7 +96,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		);
 
 		if ( -e $config{'rss_file'} and -s $config{'rss_file'} > 0 ) {
-			link( $config{'rss_file'}, "$config{'rss_file'}.bak" );
+			copy( $config{'rss_file'}, "$config{'rss_file'}.bak" );
 			$rss->parsefile($config{'rss_file'});
 			if (@{$rss->{'items'}} == 5) {
 				my $last_item = pop(@{$rss->{'items'}});
