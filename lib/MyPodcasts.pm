@@ -71,14 +71,13 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		$config{'title'}    = sprintf('%s for %s %02d, %4d',$config{'name'},$month{$mon},$mday,$year);
 		$config{'filename'} = sprintf('%s-%4d-%02d-%02d.mp3',$config{'name'},$year,$mon,$mday);
 		$config{'filename'} =~ s/\s+/_/g;
-		$config{'dumpfile'} = "/tmp/$config{filename}";
 		$config{'rss_file'} = "$ENV{HOME}/podcasts/$podcast.xml";
 		$config{'destfile'} = "$ENV{HOME}/podcasts/$podcast/$config{'filename'}";
 
 		return %config;
 	}
 
-	sub listPodcasts {
+	sub list {
 		return keys %$config;
 	}
 
@@ -165,11 +164,11 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 
 		my %config = $pkg->getConfig( $podcast, $daysago );
 
-		my $mp3_file = MP3::Tag->new($config{destfile}) || die "could not instatiate MP3::Tag: $!";
+		my $mp3_file = MP3::Tag->new($config{'destfile'}) || die "could not instatiate MP3::Tag: $!";
 		my $id3v2 = $mp3_file->new_tag('ID3v2');
 		$id3v2->add_frame('TIT1','Podcast');
-		$id3v2->add_frame('TIT2',$config{title});
-		$id3v2->add_frame('TPOE',$config{artist});
+		$id3v2->add_frame('TIT2',$config{'title'});
+		$id3v2->add_frame('TPOE',$config{'artist'});
 		$id3v2->write_tag();
 
 		return;
@@ -203,7 +202,7 @@ MyPodcasts - Collects and builds Podcast information into an RSS stream
 
 	use MyPodcasts;
 
-	my @podcasts = MyPodcasts->listPodcasts();
+	my @podcasts = MyPodcasts->list();
 
 	my $podcast = MyPodcasts->getConfig('foo');
 

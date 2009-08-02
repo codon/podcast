@@ -27,7 +27,7 @@ GetOptions(
 );
 
 if ( $list ) {
-	print "Known Podcasts: \n\t".join("\n\t", MyPodcasts->listPodcasts())."\n";
+	print "Known Podcasts: \n\t".join("\n\t", MyPodcasts->list())."\n";
 	exit(0);
 }
 
@@ -79,8 +79,8 @@ sub capture_stream {
 sub build_feed {
 	my $podcast = shift;
 
-	die "cannot build feed for $podcast{'name'}: $podcast{'dumpfile'} does not exist\n"
-			unless (-e qq|$ENV{HOME}/podcasts/$podcast/$podcast{'filename'}|);
+	die "cannot build feed for $podcast{'name'}: $podcast{'destfile'} does not exist\n"
+			unless (-e $podcast{'destfile'});
 
 	# update the RSS file
 	MyPodcasts->buildRSS($podcast, $daysago);
