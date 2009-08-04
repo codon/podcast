@@ -32,7 +32,7 @@ if ( $list ) {
 }
 
 # look up podcast in MyPodcasts
-my %podcast = ($podcast) ? MyPodcasts->getConfig( $podcast, $daysago ) : ();
+my %podcast = ($podcast) ? MyPodcasts->get_Config( $podcast, $daysago ) : ();
 
 if ( $help || !$podcast{'source'} ) {
 	warn "$podcast: invalid podcast\n" unless $podcast{'source'};
@@ -82,7 +82,7 @@ sub build_feed {
 			unless (-e $podcast{'destfile'});
 
 	# update the RSS file
-	MyPodcasts->buildRSS($podcast, $daysago);
+	MyPodcasts->build_RSS($podcast, $daysago);
 }
 
 sub usage {

@@ -61,7 +61,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		6 => 'Sat',
 	);
 
-	sub getConfig {
+	sub get_Config {
 		my ($pkg, $podcast, $daysago) = (@_,0);
 
 		my %config = %{ $config->{$podcast} };
@@ -82,7 +82,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		return keys %$config;
 	}
 
-	sub buildRSS {
+	sub build_RSS {
 		my ($pkg, $podcast, $daysago) = @_;
 
 		my %config = $pkg->getConfig( $podcast, $daysago );
