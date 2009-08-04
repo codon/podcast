@@ -55,11 +55,10 @@ sub capture_stream {
 
 	# instatiate and set up the Curl client
 	my $curl = WWW::Curl::Easy->new();
-# 	$curl->setopt(CURLOPT_SILENT,1);
-	$curl->setopt(CURLOPT_BUFFERSIZE,0);
-	$curl->setopt(CURLOPT_TIMEOUT,$podcast{'duration'});
-	$curl->setopt(CURLOPT_WRITEDATA,$mp3);
-	$curl->setopt(CURLOPT_URL,$podcast{'source'});
+	$curl->setopt(CURLOPT_BUFFERSIZE,0);                   # do not buffer; write straight to disk
+	$curl->setopt(CURLOPT_TIMEOUT,$podcast{'duration'});   # how long to capture the stream (in seconds)
+	$curl->setopt(CURLOPT_WRITEDATA,$mp3);                 # where to write the data
+	$curl->setopt(CURLOPT_URL,$podcast{'source'});         # the url to capture
 
 	# make the call
 	my $rc = $curl->perform();
@@ -69,7 +68,7 @@ sub capture_stream {
 		MyPodcasts->add_ID3_tag( $podcast, $daysago );
 	}
 	else {
-		# problems
+		# problems XXX TBD Better error handling?
 		$curl->strerror($rc);
 	}
 
