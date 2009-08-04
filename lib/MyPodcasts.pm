@@ -14,6 +14,12 @@ use constant 'MIN'  => 60          ; # seconds in an minute
 use constant 'HRS'  => 60 * 60     ; # seconds in an hour
 use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 
+sub new {
+	my($pkg, @args) = @_;
+	my $self = bless {@args}, $pkg;
+	return $self;
+}
+
 {
 	( my $conf_dir = __FILE__ ) =~ s/\.pm$//;
 	my $config = {};
