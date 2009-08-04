@@ -119,6 +119,7 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		my %extraction = $config{'extract'}->( $config{'home_page'} );
 		$extraction{'duration'} = _estimate_duration( $size );
 		my $description = delete $extraction{'summary'};
+		addLyrics( $config{'destfile'}, $description );
 		$rss->add_item(
 			title       => $extraction{'title'} || $extraction{'subtitle'},
 			itunes      => { %extraction },
@@ -170,6 +171,17 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 		$id3v2->add_frame('TIT1','Podcast');
 		$id3v2->add_frame('TIT2',$config{'title'});
 		$id3v2->add_frame('TPOE',$config{'artist'});
+		$id3v2->write_tag();
+
+		return;
+	}
+
+	sub add_Lyrics {
+		my ($file,$lyrics) = @_;
+
+		my $mp3_file = MP3::Tag->new($file) || die "could not instatiate MP3::Tag: $!";
+		my $id3v2 = $mp3_file->new_tag('ID3v2');
+		$id3v2->add_frame('USLT',$lyrics);
 		$id3v2->write_tag();
 
 		return;
