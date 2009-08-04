@@ -17,24 +17,24 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 {
 	( my $conf_dir = __FILE__ ) =~ s/\.pm$//;
 	my $config = {};
-	eval {
-		if ( -d $conf_dir && -r $conf_dir ) {
-			opendir my $dir, $conf_dir or die "cannot open $conf_dir: $!\n";
-			for my $file ( grep { -f "$conf_dir/$_" } readdir $dir ) {
-				my $tmp_config = do "$conf_dir/$file";
+	if ( -d $conf_dir && -r $conf_dir ) {
+		opendir my $dir, $conf_dir or die "cannot open $conf_dir: $!\n";
+		for my $file ( grep { -f "$conf_dir/$_" } readdir $dir ) {
+			warn "reading $conf_dir/$file\n";
+			my $tmp_config = eval{ do "$conf_dir/$file" };
 
-				if ( defined $tmp_config and not ( ref($tmp_config) eq 'HASH' ) ) {
-					warn "$conf_dir/$file: invalid podcast file\n";
-					next;
-				}
-
-				$config->{ $file } = $tmp_config;
+			if ($@) {
+				warn "WARNING: $@\n";
+				$config = {};
 			}
+
+			unless ( defined $tmp_config and ( ref($tmp_config) eq 'HASH' ) ) {
+				warn "$conf_dir/$file: invalid podcast file\n";
+				next;
+			}
+
+			$config->{ $file } = $tmp_config;
 		}
-	};
-	if ($@) {
-		warn "WARNING: $@\n";
-		$config = {};
 	}
 
 	my %month = (
