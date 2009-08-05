@@ -26,20 +26,15 @@ sub new {
 	return $self;
 }
 
-{
-	( my $conf_dir = __FILE__ ) =~ s/\.pm$//;
-	my $config = {};
+( my $conf_dir = __FILE__ ) =~ s/\.pm$//;
+my $config = {};
+eval {
 	if ( -d $conf_dir && -r $conf_dir ) {
 		opendir my $dir, $conf_dir or die "cannot open $conf_dir: $!\n";
 		for my $file ( grep { -f "$conf_dir/$_" } readdir $dir ) {
-			my $tmp_config = eval{ do "$conf_dir/$file" };
+			my $tmp_config = do "$conf_dir/$file";
 
-			if ($@) {
-				warn "WARNING: $@\n";
-				$config = {};
-			}
-
-			unless ( defined $tmp_config and ( ref($tmp_config) eq 'HASH' ) ) {
+			if ( defined $tmp_config and not ( ref($tmp_config) eq 'HASH' ) ) {
 				warn "$conf_dir/$file: invalid podcast file\n";
 				next;
 			}
@@ -47,141 +42,145 @@ sub new {
 			$config->{ $file } = $tmp_config;
 		}
 	}
+};
+if ($@) {
+	warn "WARNING: $@\n";
+	$config = {};
+}
 
 
-	sub get_Config {
-		my ($pkg, $podcast, $daysago) = (@_,0);
+sub get_Config {
+	my ($pkg, $podcast, $daysago) = (@_,0);
 
-		my %config = %{ $config->{$podcast} };
+	my %config = %{ $config->{$podcast} };
 
-		my ($mday,$mon,$year) = (localtime(time() - ($daysago * DAYS)))[3 .. 5];
-		$mon++; $year+=1900;
+	my ($mday,$mon,$year) = (localtime(time() - ($daysago * DAYS)))[3 .. 5];
+	$mon++; $year+=1900;
 
-		$config{'title'}    = sprintf('%s for %s %02d, %4d',$config{'name'},$month{$mon},$mday,$year);
-		$config{'filename'} = sprintf('%s-%4d-%02d-%02d.mp3',$config{'name'},$year,$mon,$mday);
-		$config{'filename'} =~ s/\s+/_/g;
-		$config{'rss_file'} = "$ENV{HOME}/podcasts/$podcast.xml";
-		$config{'destfile'} = "$ENV{HOME}/podcasts/$podcast/$config{'filename'}";
+	$config{'title'}    = sprintf('%s for %s %02d, %4d',$config{'name'},$month{$mon},$mday,$year);
+	$config{'filename'} = sprintf('%s-%4d-%02d-%02d.mp3',$config{'name'},$year,$mon,$mday);
+	$config{'filename'} =~ s/\s+/_/g;
+	$config{'rss_file'} = "$ENV{HOME}/podcasts/$podcast.xml";
+	$config{'destfile'} = "$ENV{HOME}/podcasts/$podcast/$config{'filename'}";
 
-		return %config;
+	return %config;
+}
+
+sub list {
+	return keys %$config;
+}
+
+sub build_RSS {
+	my ($pkg, $podcast, $daysago) = @_;
+
+	my $config = $self->_parse_conf( $self->{'config'}{$podcast} );
+
+
+	my $rss = XML::RSS->new( version => '2.0' );
+	$rss->add_module(
+		prefix   => 'itunes',
+		uri      => 'http://www.itunes.com/dtds/podcast-1.0.dtd',
+		version  => '2.0',
+	);
+
+	if ( -e $config{'rss_file'} and -s $config{'rss_file'} > 0 ) {
+		copy( $config{'rss_file'}, "$config{'rss_file'}.bak" );
+		$rss->parsefile($config{'rss_file'});
+		if (@{$rss->{'items'}} == 5) {
+			my $last_item = pop(@{$rss->{'items'}});
+			my $url = $last_item->{'enclosure'}->{'url'} || '';
+			$url =~ s[^http://example\.com/][];
+			unlink "$ENV{HOME}/$url" if ($url);
+		}
 	}
-
-	sub list {
-		return keys %$config;
-	}
-
-	sub build_RSS {
-		my ($pkg, $podcast, $daysago) = @_;
-
-		my $config = $self->_parse_conf( $self->{'config'}{$podcast} );
-
-
-		my $rss = XML::RSS->new( version => '2.0' );
-		$rss->add_module(
-			prefix   => 'itunes',
-			uri      => 'http://www.itunes.com/dtds/podcast-1.0.dtd',
-			version  => '2.0',
+	else {
+		$rss->channel(
+			title          => $config{'name'},
+			link           => $config{'home_page'},
+			language       => 'en-us',
+			itunes         => { map { $_ => $config{$_} } qw( subtitle summary author ) },
+			description    => $config{'description'},
+			copyright      => $config{'copyright'},
 		);
-
-		if ( -e $config{'rss_file'} and -s $config{'rss_file'} > 0 ) {
-			copy( $config{'rss_file'}, "$config{'rss_file'}.bak" );
-			$rss->parsefile($config{'rss_file'});
-			if (@{$rss->{'items'}} == 5) {
-				my $last_item = pop(@{$rss->{'items'}});
-				my $url = $last_item->{'enclosure'}->{'url'} || '';
-				$url =~ s[^http://example\.com/][];
-				unlink "$ENV{HOME}/$url" if ($url);
-			}
-		}
-		else {
-			$rss->channel(
-				title          => $config{'name'},
-				link           => $config{'home_page'},
-				language       => 'en-us',
-				itunes         => { map { $_ => $config{$_} } qw( subtitle summary author ) },
-				description    => $config{'description'},
-				copyright      => $config{'copyright'},
-			);
-		}
-
-		my $size = (stat $config{'destfile'})[7];
-		my %extraction = $config{'extract'}->( $config{'home_page'} );
-		$extraction{'duration'} = _estimate_duration( $size );
-		my $description = delete $extraction{'summary'};
-		addLyrics( $config{'destfile'}, $description );
-		$rss->add_item(
-			title       => $extraction{'title'} || $extraction{'subtitle'},
-			itunes      => { %extraction },
-			description => $description,
-			category    => 'podcasts',
-			enclosure   => {
-				'url'    => sprintf('http://example.com/podcasts/%s/%s',$podcast,$config{'filename'}),
-				'type'   => "audio/mpeg",
-				'length' => $size,
-			},
-			mode        => 'insert',
-		);
-
-		if (scalar @{ $rss->{'items'} || [] } > 1) {
-			my ($thing1,$thing2) = map {
-				$_->{'itunes'}{'summary'} || $_->{'description'} || ''
-			} @{ $rss->{'items'} }[0,1];
-			if ( length($thing1) > 0 and $thing1 eq $thing2) {
-				die "$config{'home_page'} has not been updated\n";
-			}
-		}
-
-		eval {
-			$rss->save($config{'rss_file'});
-		};
-
-		if ($@) {
-			warn $@;
-			if ( -e "$config{'rss_file'}.bak" ) {
-				rename( "$config{'rss_file'}.bak", $config{'rss_file'} );
-			}
-		}
-		else {
-			if ( -e "$config{'rss_file'}.bak" ) {
-				unlink( "$config{'rss_file'}.bak" );
-			}
-		}
-
-		return;
 	}
 
-	sub add_ID3_tag {
-		my ($pkg, $podcast, $daysago) = @_;
+	my $size = (stat $config{'destfile'})[7];
+	my %extraction = $config{'extract'}->( $config{'home_page'} );
+	$extraction{'duration'} = _estimate_duration( $size );
+	my $description = delete $extraction{'summary'};
+	addLyrics( $config{'destfile'}, $description );
+	$rss->add_item(
+		title       => $extraction{'title'} || $extraction{'subtitle'},
+		itunes      => { %extraction },
+		description => $description,
+		category    => 'podcasts',
+		enclosure   => {
+			'url'    => sprintf('http://example.com/podcasts/%s/%s',$podcast,$config{'filename'}),
+			'type'   => "audio/mpeg",
+			'length' => $size,
+		},
+		mode        => 'insert',
+	);
 
-		my %config = $self->get_Config( $podcast, $daysago );
-
-		my $mp3_file = MP3::Tag->new($config{'destfile'}) || die "could not instatiate MP3::Tag: $!";
-		my $id3v2 = $mp3_file->new_tag('ID3v2');
-		$id3v2->add_frame('TIT1','Podcast');
-		$id3v2->add_frame('TIT2',$config{'title'});
-		$id3v2->add_frame('TPOE',$config{'artist'});
-		$id3v2->write_tag();
-
-		return;
+	if (scalar @{ $rss->{'items'} || [] } > 1) {
+		my ($thing1,$thing2) = map {
+			$_->{'itunes'}{'summary'} || $_->{'description'} || ''
+		} @$rss->{'items'}[0,1];
+		if ( length($thing1) > 0 and $thing1 eq $thing2) {
+			die "$config{'home_page'} has not been updated\n";
+		}
 	}
 
-	sub add_Lyrics {
-		my ($file,$lyrics) = @_;
+	eval {
+		$rss->save($config{'rss_file'});
+	};
 
-		my $mp3_file = MP3::Tag->new($file) || die "could not instatiate MP3::Tag: $!";
-		my $id3v2 = $mp3_file->new_tag('ID3v2');
-		$id3v2->add_frame('USLT',$lyrics);
-		$id3v2->write_tag();
-
-		return;
+	if ($@) {
+		warn $@;
+		if ( -e "$config{'rss_file'}.bak" ) {
+			rename( "$config{'rss_file'}.bak", $config{'rss_file'} );
+		}
+	}
+	else {
+		if ( -e "$config{'rss_file'}.bak" ) {
+			unlink( "$config{'rss_file'}.bak" );
+		}
 	}
 
-	sub get_pubDate {
-		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
-		# pubDate should be of the format: Sat, 9 Jun 2007 17:00:00 -0700
-		return sprintf('%3s, %d %s %4d %02d:%02d:%02d -0700',
-			$day{$wday}, $mday, $month{++$mon}, ($year + 1900), $hour, $min, $sec );
-	}
+	return;
+}
+
+sub add_ID3_tag {
+	my ($pkg, $podcast, $daysago) = @_;
+
+	my %config = $self->get_Config( $podcast, $daysago );
+
+	my $mp3_file = MP3::Tag->new($config{'destfile'}) || die "could not instatiate MP3::Tag: $!";
+	my $id3v2 = $mp3_file->new_tag('ID3v2');
+	$id3v2->add_frame('TIT1','Podcast');
+	$id3v2->add_frame('TIT2',$config{'title'});
+	$id3v2->add_frame('TPOE',$config{'artist'});
+	$id3v2->write_tag();
+
+	return;
+}
+
+sub add_Lyrics {
+	my ($file,$lyrics) = @_;
+
+	my $mp3_file = MP3::Tag->new($file) || die "could not instatiate MP3::Tag: $!";
+	my $id3v2 = $mp3_file->new_tag('ID3v2');
+	$id3v2->add_frame('USLT',$lyrics);
+	$id3v2->write_tag();
+
+	return;
+}
+
+sub get_pubDate {
+	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
+	# pubDate should be of the format: Sat, 9 Jun 2007 17:00:00 -0700
+	return sprintf('%3s, %d %s %4d %02d:%02d:%02d -0700',
+		$day{$wday}, $mday, $month{++$mon}, ($year + 1900), $hour, $min, $sec );
 }
 
 sub _estimate_duration {
