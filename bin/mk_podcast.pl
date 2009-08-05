@@ -37,7 +37,7 @@ if ( $list ) {
 my %podcast = ($podcast) ? $Podcast->get_Config( $podcast, $daysago ) : ();
 
 if ( $help || !$podcast{'source'} ) {
-	warn "$podcast: invalid podcast\n" unless $podcast{'source'};
+	warn "$podcast: invalid podcast\n" if ($podcast && !$podcast{'source'});
 	die usage();
 }
 
