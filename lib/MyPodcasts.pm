@@ -21,60 +21,81 @@ my %month = ( 0  => undef,
 my %day = ( 0 => 'Sun', 1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat' );
 
 sub new {
-	my($pkg, @args) = @_;
-	my $self = bless {@args}, $pkg;
+	my($class, @args) = @_;
+	my $self = bless {@args}, $class;
+	$self->{'config'} = $self->_find_confs();
 	return $self;
 }
 
-( my $conf_dir = __FILE__ ) =~ s/\.pm$//;
-my $config = {};
-eval {
-	if ( -d $conf_dir && -r $conf_dir ) {
-		opendir my $dir, $conf_dir or die "cannot open $conf_dir: $!\n";
-		for my $file ( grep { -f "$conf_dir/$_" } readdir $dir ) {
-			my $tmp_config = do "$conf_dir/$file";
+sub _parse_conf {
+	my ( $self, $file ) = @_;
 
-			if ( defined $tmp_config and not ( ref($tmp_config) eq 'HASH' ) ) {
-				warn "$conf_dir/$file: invalid podcast file\n";
-				next;
-			}
+	my $config = eval {
+		my $tmp_config = do "$file";
 
-			$config->{ $file } = $tmp_config;
+		if ( defined $tmp_config and not ( ref($tmp_config) eq 'HASH' ) ) {
+			warn "$file: invalid podcast file\n";
+			return;
 		}
+
+		return $tmp_config;
+	};
+	if ($@) {
+		warn "WARNING: $@\n";
+		$config = {};
 	}
-};
-if ($@) {
-	warn "WARNING: $@\n";
-	$config = {};
+
+	return $config;
 }
 
+sub _find_confs {
+	my ( $self ) = @_;
+
+	# currently confs are in a MyPodcasts dir beside this file
+	( my $conf_dir = __FILE__ ) =~ s/\.pm$//;
+
+	my %kampf;
+	if ( -d $conf_dir && -r $conf_dir ) {
+		opendir my $dir, $conf_dir or die "cannot open $conf_dir: $!\n";
+		%kampf = map { @$_ } grep { -f $_->[1] } map { [ $_, "$conf_dir/$_" ] } readdir $dir;
+	}
+
+	return \%kampf
+}
 
 sub get_Config {
-	my ($pkg, $podcast, $daysago) = (@_,0);
+	my ($self, $podcast, $daysago) = (@_,0);
 
-	my %config = %{ $config->{$podcast} };
+	unless ( exists $self->{'config'}{$podcast} ) {
+		die "Unkown podcast: $podcast\n";
+	}
+
+	# skip this work if we've already parsed this config
+	return ( %{ $self->{'config'}{$podcast} } ) if ( ref( $self->{'config'}{$podcast} ) );
+
+	my $config = $self->_parse_conf( $self->{'config'}{$podcast} );
 
 	my ($mday,$mon,$year) = (localtime(time() - ($daysago * DAYS)))[3 .. 5];
 	$mon++; $year+=1900;
 
-	$config{'title'}    = sprintf('%s for %s %02d, %4d',$config{'name'},$month{$mon},$mday,$year);
-	$config{'filename'} = sprintf('%s-%4d-%02d-%02d.mp3',$config{'name'},$year,$mon,$mday);
-	$config{'filename'} =~ s/\s+/_/g;
-	$config{'rss_file'} = "$ENV{HOME}/podcasts/$podcast.xml";
-	$config{'destfile'} = "$ENV{HOME}/podcasts/$podcast/$config{'filename'}";
+	$config->{'title'}    = sprintf('%s for %s %02d, %4d', $config->{'name'},$month{$mon},$mday,$year);
+	$config->{'filename'} = sprintf('%s-%4d-%02d-%02d.mp3',$config->{'name'},$year, $mon, $mday);
+	$config->{'filename'} =~ s/\s+/_/g;
+	$config->{'rss_file'} = "$ENV{HOME}/podcasts/$podcast.xml";
+	$config->{'destfile'} = "$ENV{HOME}/podcasts/$podcast/$config->{'filename'}";
 
-	return %config;
+	$self->{'config'}{$podcast} = $config;
+	return %$config;
 }
 
 sub list {
-	return keys %$config;
+	return keys %{ $_[0]->{'config'} };
 }
 
 sub build_RSS {
-	my ($pkg, $podcast, $daysago) = @_;
+	my ($self, $podcast, $daysago) = @_;
 
-	my $config = $self->_parse_conf( $self->{'config'}{$podcast} );
-
+	my %config = %{ $self->get_Config( $podcast, $daysago ) };
 
 	my $rss = XML::RSS->new( version => '2.0' );
 	$rss->add_module(
@@ -105,7 +126,7 @@ sub build_RSS {
 	}
 
 	my $size = (stat $config{'destfile'})[7];
-	my %extraction = $config{'extract'}->( $config{'home_page'} );
+	my %extraction = $config{'extract'}->( $self, $config{'home_page'} ); # fake an OO call
 	$extraction{'duration'} = _estimate_duration( $size );
 	my $description = delete $extraction{'summary'};
 	addLyrics( $config{'destfile'}, $description );
@@ -151,7 +172,7 @@ sub build_RSS {
 }
 
 sub add_ID3_tag {
-	my ($pkg, $podcast, $daysago) = @_;
+	my ($self, $podcast, $daysago) = @_;
 
 	my %config = $self->get_Config( $podcast, $daysago );
 

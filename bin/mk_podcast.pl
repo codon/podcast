@@ -26,13 +26,15 @@ GetOptions(
 	"help"      => \$help,
 );
 
+my $Podcast = MyPodcasts->new( podcast => $podcast, daysago => $daysago );
+
 if ( $list ) {
-	print "Known Podcasts: \n\t".join("\n\t", MyPodcasts->list())."\n";
+	print "Known Podcasts: \n\t".join("\n\t", $Podcast->list())."\n";
 	exit(0);
 }
 
-# look up podcast in MyPodcasts
-my %podcast = ($podcast) ? MyPodcasts->get_Config( $podcast, $daysago ) : ();
+# look up podcast in $Podcast
+my %podcast = ($podcast) ? $Podcast->get_Config( $podcast, $daysago ) : ();
 
 if ( $help || !$podcast{'source'} ) {
 	warn "$podcast: invalid podcast\n" unless $podcast{'source'};
@@ -65,7 +67,7 @@ sub capture_stream {
 
 	if ( 28 == $rc ) { # expect a timeout; this is a continuous stream we're grabbing...
 		# ok
-		MyPodcasts->add_ID3_tag( $podcast, $daysago );
+		$Podcast->add_ID3_tag( $podcast, $daysago );
 	}
 	else {
 		# problems XXX TBD Better error handling?
@@ -82,7 +84,7 @@ sub build_feed {
 			unless (-e $podcast{'destfile'});
 
 	# update the RSS file
-	MyPodcasts->build_RSS($podcast, $daysago);
+	$Podcast->build_RSS($podcast, $daysago);
 }
 
 sub usage {
