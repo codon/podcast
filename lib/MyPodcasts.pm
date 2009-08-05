@@ -73,7 +73,8 @@ sub new {
 	sub build_RSS {
 		my ($pkg, $podcast, $daysago) = @_;
 
-		my %config = $pkg->getConfig( $podcast, $daysago );
+		my $config = $self->_parse_conf( $self->{'config'}{$podcast} );
+
 
 		my $rss = XML::RSS->new( version => '2.0' );
 		$rss->add_module(
@@ -152,7 +153,7 @@ sub new {
 	sub add_ID3_tag {
 		my ($pkg, $podcast, $daysago) = @_;
 
-		my %config = $pkg->getConfig( $podcast, $daysago );
+		my %config = $self->get_Config( $podcast, $daysago );
 
 		my $mp3_file = MP3::Tag->new($config{'destfile'}) || die "could not instatiate MP3::Tag: $!";
 		my $id3v2 = $mp3_file->new_tag('ID3v2');
@@ -205,7 +206,7 @@ MyPodcasts - Collects and builds Podcast information into an RSS stream
 
 	my @podcasts = MyPodcasts->list();
 
-	my $podcast = MyPodcasts->getConfig('foo');
+	my $podcast = MyPodcasts->get_Config('foo');
 
 	MyPodcasts->add_ID3_tag($podcast);
 
