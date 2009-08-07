@@ -25,6 +25,8 @@ sub new {
 	my $self = bless {@args}, $class;
 	$self->{'config'} = $self->_find_confs();
 	$self->{'daysago'} ||= 0; # default to today (now);
+	$self->{'basedir'} ||= "$ENV{HOME}/podcasts";
+	$self->{'baseurl'} ||= 'http://example.com/podcasts';
 
 	if ( defined $self->{'podcast'} and exists $self->{'config'}{ $self->{'podcast'} } ) {
 		$self->get_Config();
@@ -85,8 +87,11 @@ sub get_Config {
 	$config->{'title'}    = sprintf('%s for %s %02d, %4d', $config->{'name'},$month{$mon},$mday,$year);
 	$config->{'filename'} = sprintf('%s-%4d-%02d-%02d.mp3',$config->{'name'},$year, $mon, $mday);
 	$config->{'filename'} =~ s/\s+/_/g;
-	$config->{'rss_file'} = "$ENV{HOME}/podcasts/$podcast.xml";
-	$config->{'destfile'} = "$ENV{HOME}/podcasts/$podcast/$config->{'filename'}";
+	$config->{'rss_file'} = "$self->{'basedir'}/$podcast.xml";
+	$config->{'destfile'} = "$self->{'basedir'}/$podcast/$config->{'filename'}";
+
+	# Ensure the destination dir exists
+	mkpath( "$self->{'basedir'}/$podcast" ) unless ( -d "$self->{'basedir'}/$podcast" );
 
 	$self->{'config'}{$podcast} = $config;
 	return %$config;
@@ -114,8 +119,8 @@ sub build_RSS {
 		if (@{$rss->{'items'}} == 5) {
 			my $last_item = pop(@{$rss->{'items'}});
 			my $url = $last_item->{'enclosure'}->{'url'} || '';
-			$url =~ s[^http://example\.com/][];
-			unlink "$ENV{HOME}/$url" if ($url);
+			$url =~ s[^$self->{'baseurl'}/][$self->{'basedir'}];
+			unlink $url if ( -e $url );
 		}
 	}
 	else {
@@ -140,7 +145,7 @@ sub build_RSS {
 		description => $description,
 		category    => 'podcasts',
 		enclosure   => {
-			'url'    => sprintf('http://example.com/podcasts/%s/%s',$self->{'podcast'},$config{'filename'}),
+			'url'    => sprintf('%s/%s/%s',$self->{'baseurl'},$self->{'podcast'},$config{'filename'}),
 			'type'   => "audio/mpeg",
 			'length' => $size,
 		},

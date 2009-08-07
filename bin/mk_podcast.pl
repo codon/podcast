@@ -15,18 +15,26 @@ use WWW::Curl::Easy qw(
 
 use MyPodcasts;
 
-my ($podcast, $capture, $feed, $list, $daysago, $help) = (undef, 1, 1, undef, 0, 0);
+my ($podcast, $capture, $feed, $list, $daysago, $basedir, $baseurl, $help) =
+   ( undef,    1,        1,    undef,  0,        undef,    undef,    0);
 
 GetOptions(
 	"podcast=s" => \$podcast,
 	"capture!"  => \$capture,
 	"feed!"     => \$feed,
 	"list"      => \$list,
+	"basedir"   => \$basedir,
+	"baseurl"   => \$baseurl,
 	"daysago=i" => \$daysago,
 	"help"      => \$help,
 );
 
-my $Podcast = MyPodcasts->new( podcast => $podcast, daysago => $daysago );
+my $Podcast = MyPodcasts->new(
+	podcast => $podcast,
+	basedir => $basedir,
+	baseurl => $baseurl,
+	daysago => $daysago,
+);
 
 if ( $list ) {
 	print "Known Podcasts: \n\t".join("\n\t", $Podcast->list())."\n";
@@ -48,9 +56,6 @@ exit(0);
 
 sub capture_stream {
 	my $podcast = shift;
-
-	# Ensure the destination dir exists
-	mkpath( qq|$ENV{HOME}/podcasts/$podcast| ) unless ( -d qq|$ENV{HOME}/podcasts/$podcast| );
 
 	# open the destination file
 	open my $mp3, '>', $podcast{'destfile'} or die "could not open destination file: $!\n";
