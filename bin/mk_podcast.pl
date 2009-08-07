@@ -34,15 +34,15 @@ if ( $list ) {
 }
 
 # look up podcast in $Podcast
-my %podcast = ($podcast) ? $Podcast->get_Config( $podcast, $daysago ) : ();
+my %podcast = ($podcast) ? $Podcast->get_Config() : ();
 
 if ( $help || !$podcast{'source'} ) {
 	warn "$podcast: invalid podcast\n" if ($podcast && !$podcast{'source'});
 	die usage();
 }
 
-capture_stream($podcast) if ($capture);
-build_feed(    $podcast) if ($feed);
+capture_stream($Podcast) if ($capture);
+build_feed(    $Podcast) if ($feed);
 
 exit(0);
 

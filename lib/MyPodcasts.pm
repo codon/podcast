@@ -24,6 +24,11 @@ sub new {
 	my($class, @args) = @_;
 	my $self = bless {@args}, $class;
 	$self->{'config'} = $self->_find_confs();
+	$self->{'daysago'} ||= 0; # default to today (now);
+
+	if ( defined $self->{'podcast'} and exists $self->{'config'}{ $self->{'podcast'} } ) {
+		$self->get_Config();
+	}
 	return $self;
 }
 
@@ -64,18 +69,17 @@ sub _find_confs {
 }
 
 sub get_Config {
-	my ($self, $podcast, $daysago) = (@_,0);
+	my ($self) = (@_);
 
-	unless ( exists $self->{'config'}{$podcast} ) {
-		die "Unkown podcast: $podcast\n";
-	}
+	# if we didn't get a podcast name, we can't really come up with its config
+	my $podcast = $self->{'podcast'} || return;
 
 	# skip this work if we've already parsed this config
 	return ( %{ $self->{'config'}{$podcast} } ) if ( ref( $self->{'config'}{$podcast} ) );
 
 	my $config = $self->_parse_conf( $self->{'config'}{$podcast} );
 
-	my ($mday,$mon,$year) = (localtime(time() - ($daysago * DAYS)))[3 .. 5];
+	my ($mday,$mon,$year) = (localtime(time() - ($self->{'daysago'} * DAYS)))[3 .. 5];
 	$mon++; $year+=1900;
 
 	$config->{'title'}    = sprintf('%s for %s %02d, %4d', $config->{'name'},$month{$mon},$mday,$year);
@@ -93,9 +97,9 @@ sub list {
 }
 
 sub build_RSS {
-	my ($self, $podcast, $daysago) = @_;
+	my ($self) = @_;
 
-	my %config = %{ $self->get_Config( $podcast, $daysago ) };
+	my %config = %{ $self->get_Config() };
 
 	my $rss = XML::RSS->new( version => '2.0' );
 	$rss->add_module(
@@ -136,7 +140,7 @@ sub build_RSS {
 		description => $description,
 		category    => 'podcasts',
 		enclosure   => {
-			'url'    => sprintf('http://example.com/podcasts/%s/%s',$podcast,$config{'filename'}),
+			'url'    => sprintf('http://example.com/podcasts/%s/%s',$self->{'podcast'},$config{'filename'}),
 			'type'   => "audio/mpeg",
 			'length' => $size,
 		},
@@ -172,9 +176,9 @@ sub build_RSS {
 }
 
 sub add_ID3_tag {
-	my ($self, $podcast, $daysago) = @_;
+	my ($self) = @_;
 
-	my %config = $self->get_Config( $podcast, $daysago );
+	my %config = $self->get_Config();
 
 	my $mp3_file = MP3::Tag->new($config{'destfile'}) || die "could not instatiate MP3::Tag: $!";
 	my $id3v2 = $mp3_file->new_tag('ID3v2');
