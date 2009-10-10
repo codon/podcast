@@ -20,7 +20,6 @@ use constant 'DAYS' => 60 * 60 * 24; # seconds in a day
 	if ( -d $conf_dir && -r $conf_dir ) {
 		opendir my $dir, $conf_dir or die "cannot open $conf_dir: $!\n";
 		for my $file ( grep { -f "$conf_dir/$_" } readdir $dir ) {
-			warn "reading $conf_dir/$file\n";
 			my $tmp_config = eval{ do "$conf_dir/$file" };
 
 			if ($@) {
