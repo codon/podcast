@@ -58,21 +58,21 @@ sub capture_stream {
 	my $podcast = shift;
 
 	# open the destination file
-	open my $mp3, '>', $podcast{'destfile'} or die "could not open destination file: $!\n";
+	open my $mp3, '>', $podcast->{'destfile'} or die "could not open destination file: $!\n";
 
 	# instatiate and set up the Curl client
 	my $curl = WWW::Curl::Easy->new();
-	$curl->setopt(CURLOPT_BUFFERSIZE,0);                   # do not buffer; write straight to disk
-	$curl->setopt(CURLOPT_TIMEOUT,$podcast{'duration'});   # how long to capture the stream (in seconds)
-	$curl->setopt(CURLOPT_WRITEDATA,$mp3);                 # where to write the data
-	$curl->setopt(CURLOPT_URL,$podcast{'source'});         # the url to capture
+	$curl->setopt(CURLOPT_BUFFERSIZE,0);                     # do not buffer; write straight to disk
+	$curl->setopt(CURLOPT_TIMEOUT,$podcast->{'duration'});   # how long to capture the stream (in seconds)
+	$curl->setopt(CURLOPT_WRITEDATA,$mp3);                   # where to write the data
+	$curl->setopt(CURLOPT_URL,$podcast->{'source'});         # the url to capture
 
 	# make the call
 	my $rc = $curl->perform();
 
 	if ( 28 == $rc ) { # expect a timeout; this is a continuous stream we're grabbing...
 		# ok
-		$Podcast->add_ID3_tag( $podcast, $daysago );
+		$podcast->add_ID3_tag( $daysago );
 	}
 	else {
 		# problems XXX TBD Better error handling?

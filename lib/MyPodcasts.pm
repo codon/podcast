@@ -104,7 +104,7 @@ sub list {
 sub build_RSS {
 	my ($self) = @_;
 
-	my %config = %{ $self->get_Config() };
+	my %config = $self->get_Config();
 
 	my $rss = XML::RSS->new( version => '2.0' );
 	$rss->add_module(
