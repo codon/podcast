@@ -23,8 +23,8 @@ GetOptions(
 	"capture!"  => \$capture,
 	"feed!"     => \$feed,
 	"list"      => \$list,
-	"basedir"   => \$basedir,
-	"baseurl"   => \$baseurl,
+	"basedir=s" => \$basedir,
+	"baseurl=s" => \$baseurl,
 	"daysago=i" => \$daysago,
 	"help"      => \$help,
 );
