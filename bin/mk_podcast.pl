@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use File::Path;
+use File::Path qw(mkpath);
 use Getopt::Long;
 use Time::HiRes qw( time sleep );
 use WWW::Curl::Easy qw(
