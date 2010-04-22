@@ -30,7 +30,8 @@ sub new {
 	$self->{'baseurl'} ||= 'http://example.com/podcasts';
 
 	if ( defined $self->{'podcast'} and exists $self->{'config'}{ $self->{'podcast'} } ) {
-		$self->get_Config();
+		my %config = $self->get_Config();
+		@$self{keys %config} = values %config;
 	}
 	return $self;
 }
@@ -139,7 +140,7 @@ sub build_RSS {
 	my %extraction = $config{'extract'}->( $self, $config{'home_page'} ); # fake an OO call
 	$extraction{'duration'} = _estimate_duration( $size );
 	my $description = delete $extraction{'summary'};
-	addLyrics( $config{'destfile'}, $description );
+	add_Lyrics( $config{'destfile'}, $description );
 	$rss->add_item(
 		title       => $extraction{'title'} || $extraction{'subtitle'},
 		itunes      => { %extraction },
@@ -156,7 +157,7 @@ sub build_RSS {
 	if (scalar @{ $rss->{'items'} || [] } > 1) {
 		my ($thing1,$thing2) = map {
 			$_->{'itunes'}{'summary'} || $_->{'description'} || ''
-		} @$rss->{'items'}[0,1];
+		} @{$rss->{'items'}||[]}[0,1];
 		if ( length($thing1) > 0 and $thing1 eq $thing2) {
 			die "$config{'home_page'} has not been updated\n";
 		}
