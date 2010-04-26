@@ -94,11 +94,13 @@ sub build_feed {
 
 sub usage {
 	return qq{
-		--podcast=<string>       Specify a podcast
-		--nocapture              Do not capture the stream
-		--nofeed                 Do not build the RSS feed
-		--list                   List all known podcasts
-		--daysago=n              Look for media file N days ago
-		--help                   Print this usage
+		--podcast=<string>                          Specify a podcast
+		--nocapture                                 Do not capture the stream
+		--nofeed                                    Do not build the RSS feed
+		--list                                      List all known podcasts
+		--basedir=<path/to/save/dir>                Base directory for saving streams
+		--baseurl=<http://example.com/examples>     Base url for RSS feed
+		--daysago=n                                 Look for media file N days ago
+		--help                                      Print this usage
 	\n};
 }
