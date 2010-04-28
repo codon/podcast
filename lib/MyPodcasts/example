@@ -1,0 +1,28 @@
+{
+	'name'        => 'Example Podcast',
+	'source'      => 'http://stream.example.com/',
+	'author'      => 'John Q. Public',
+	'duration'    =>  1 * HRS + 59 * MIN,
+	'description' => 'Example podcast to show capture and RSS config settings',
+	'home_page'   => 'http://programs.exaple.com/',
+	'copyright'   => 'Copyright 2010, Example Corp of America',
+	'subtitle'    => 'Example podcast subtitle',
+	'summary'     => 'Example podcast summary',
+	'extract'     => sub {
+		my $self = shift;
+		my $url = shift || return ();
+		my $content = get( $url ) || return ();
+		my $subtitle = '';
+		my $summary = '';
+
+		# parse the output in whatever way necessary to set subtitle and summary
+
+		# Since this is generally kicked off by cron, this will send an email with show
+		# information; useful to know if something went wrong, which occasionally does
+		# but which I find to generally be upstream errors.
+		use Data::Dumper;
+		warn Dumper({ subtitle => $subtitle, summary => $summary, pubDate => get_pubDate() });
+
+		return ( subtitle => nc($subtitle), summary => $summary, pubDate => get_pubDate() );
+	},
+}
