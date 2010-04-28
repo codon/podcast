@@ -66,7 +66,12 @@ sub _find_confs {
 	my %kampf;
 	if ( -d $conf_dir && -r $conf_dir ) {
 		opendir my $dir, $conf_dir or die "cannot open $conf_dir: $!\n";
-		%kampf = map { @$_ } grep { -f $_->[1] } map { [ $_, "$conf_dir/$_" ] } readdir $dir;
+		%kampf =
+			map  { @$_ }                      # expand the transform into a hash
+			grep { -f $_->[1] }               # make sure that it is a file
+			map  { [ $_ => "$conf_dir/$_" ] } # use the Shwartz(-ian transform)
+			grep { /^\w/ }                    # require conf filenames to start with a word character
+			readdir $dir;                     # get everything in the confdir
 	}
 
 	return \%kampf
