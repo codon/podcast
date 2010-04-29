@@ -1,0 +1,43 @@
+I. Introduction
+===============
+
+This software allows you to set up a "TiVo for Radio" system so you can
+record a program off of a radio station's webstream for later listening.
+This is intended for personal, non-commercial use only. The software should
+be run on private server behind a firewall of some sort and published
+podcast streams should not be made available to the whole internet. If you
+make copyrighted material available to the world, you assume full
+responsibilty for any consequences.
+
+II. Prerequisits
+================
+
+This software is built using Perl and several openly available libraries.
+In order to run, you must install the following modules (and their
+prerequisits) from CPAN.
+
+ o WWW::Curl::Easy
+ o XML::RSS
+ o MP3::Tag
+ o Lingua::EN::NameCase
+
+III. Configuration
+==================
+
+Configuration requires at least a little bit of editing on your part. There
+is no GUI. You can have a simple configuration that just saves the audio
+stream and builds a minimal feed for your podcatcher, or you can have a
+more advanced configuration that finds and metadata for an episode and
+builds a more rich feed with show tile, description, and/or playlist
+information. A simple feed can be found in lib/MyPodcasts/example.
+
+The names you choose for your configuration file are important because they
+are the names of the podcast that you will use for invocation and also for
+the uri of the RSS feed.
+
+Stream capture and feed building have been separated so that you can
+capture a show on Friday and build the feed for it on Monday when the
+show's homepage gets updated with show data.
+
+Everything can be set to run automatically via cron so you can set it and
+forget it.
