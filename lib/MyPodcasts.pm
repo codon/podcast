@@ -196,7 +196,7 @@ sub add_ID3_tag {
 	my $id3v2 = $mp3_file->new_tag('ID3v2');
 	$id3v2->add_frame('TIT1','Podcast');
 	$id3v2->add_frame('TIT2',$config{'title'});
-	$id3v2->add_frame('TPOE',$config{'artist'});
+	$id3v2->add_frame('TOPE',$config{'artist'});
 	$id3v2->write_tag();
 
 	return;
