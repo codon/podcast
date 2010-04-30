@@ -207,7 +207,7 @@ sub add_Lyrics {
 
 	my $mp3_file = MP3::Tag->new($file) || die "could not instatiate MP3::Tag: $!";
 	my $id3v2 = $mp3_file->new_tag('ID3v2');
-	$id3v2->add_frame('USLT',$lyrics);
+	$id3v2->add_frame('USLT','ASCII','en-US',$lyrics,$lyrics);
 	$id3v2->write_tag();
 
 	return;
