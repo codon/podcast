@@ -10,10 +10,13 @@
 	'summary'     => 'Example podcast summary',
 	'extract'     => sub {
 		my $self = shift;
-		my $url = shift || return ();
-		my $content = get( $url ) || return ();
-		my $subtitle = '';
-		my $summary = '';
+		my %return = (
+			subtitle => 'Episode subtitle',
+			summary => 'Episode summary (description)',
+			pubDate => get_pubDate(),
+		);
+		my $url = shift || return ( %return );
+		my $content = get( $url ) || return ( %return );
 
 		# parse the output in whatever way necessary to set subtitle and summary
 
@@ -21,8 +24,9 @@
 		# information; useful to know if something went wrong, which occasionally does
 		# but which I find to generally be upstream errors.
 		use Data::Dumper;
-		warn Dumper({ subtitle => $subtitle, summary => $summary, pubDate => get_pubDate() });
+		warn Dumper(\%return);
 
-		return ( subtitle => nc($subtitle), summary => $summary, pubDate => get_pubDate() );
+		return %return;
 	},
 }
+# vim: ft=perl:ts=4:noexpandtab
