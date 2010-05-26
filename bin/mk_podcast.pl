@@ -19,14 +19,14 @@ my ($podcast, $capture, $feed, $list, $daysago, $basedir, $baseurl, $help) =
    ( undef,    1,        1,    undef,  0,        undef,    undef,    0);
 
 GetOptions(
-	"podcast=s" => \$podcast,
-	"capture!"  => \$capture,
-	"feed!"     => \$feed,
-	"list"      => \$list,
-	"basedir=s" => \$basedir,
-	"baseurl=s" => \$baseurl,
-	"daysago=i" => \$daysago,
-	"help"      => \$help,
+	'podcast=s' => \$podcast,
+	'capture!'  => \$capture,
+	'feed!'     => \$feed,
+	'list'      => \$list,
+	'basedir=s' => \$basedir,
+	'baseurl=s' => \$baseurl,
+	'daysago=i' => \$daysago,
+	'help'      => \$help,
 );
 
 my $Podcast = MyPodcasts->new(
