@@ -126,7 +126,7 @@ sub build_RSS {
 		if (@{$rss->{'items'}} == 5) {
 			my $last_item = pop(@{$rss->{'items'}});
 			my $url = $last_item->{'enclosure'}->{'url'} || '';
-			$url =~ s[^$self->{'baseurl'}/][$self->{'basedir'}];
+			$url =~ s[^$self->{'baseurl'}][$self->{'basedir'}/];
 			unlink $url if ( -e $url );
 		}
 	}
