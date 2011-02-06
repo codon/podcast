@@ -15,8 +15,8 @@ use WWW::Curl::Easy qw(
 
 use MyPodcasts;
 
-my ($podcast, $capture, $feed, $list, $daysago, $basedir, $baseurl, $help) =
-   ( undef,    1,        1,    undef,  0,        undef,    undef,    0);
+my ($podcast, $capture, $feed, $list, $daysago, $basedir, $baseurl, $help, $overwrite,) =
+   ( undef,    1,        1,    undef,  0,        undef,    undef,    0,     0);
 
 GetOptions(
 	'podcast=s' => \$podcast,
@@ -27,6 +27,7 @@ GetOptions(
 	'baseurl=s' => \$baseurl,
 	'daysago=i' => \$daysago,
 	'help'      => \$help,
+    overwrite   => \$overwrite,
 );
 
 my $Podcast = MyPodcasts->new(
@@ -57,6 +58,9 @@ exit(0);
 sub capture_stream {
 	my $podcast = shift;
 
+    if ( -e $podcast->{'destfile'} && ! $overwrite ) {
+        die "$podcast->{'destfile'} already exists!";
+    }
 	# open the destination file
 	open my $mp3, '>', $podcast->{'destfile'} or die "could not open destination file: $!\n";
 
