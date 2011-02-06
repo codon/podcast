@@ -145,7 +145,6 @@ sub build_RSS {
 	my %extraction = $config{'extract'}->( $self, $config{'home_page'} ); # fake an OO call
 	$extraction{'duration'} = _estimate_duration( $size );
 	my $description = delete $extraction{'summary'};
-	add_Lyrics( $config{'destfile'}, $description );
 	$rss->add_item(
 		title       => $extraction{'title'} || $extraction{'subtitle'},
 		itunes      => { %extraction },
