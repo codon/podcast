@@ -40,6 +40,11 @@ sub _parse_conf {
     my ( $self, $file ) = @_;
 
     my $config = eval {
+        unless ( -e $file ) {
+            warn "$file: no known podcast matches that name\n";
+            return;
+        }
+
         my $tmp_config = do "$file";
 
         if ( defined $tmp_config and not ( ref($tmp_config) eq 'HASH' ) ) {
@@ -86,7 +91,9 @@ sub get_Config {
     # skip this work if we've already parsed this config
     return ( %{ $self->{'config'}{$podcast} } ) if ( ref( $self->{'config'}{$podcast} ) );
 
-    my $config = $self->_parse_conf( $self->{'config'}{$podcast} );
+    # If we don't know what you're talking about, we can't help you
+    my $file = $self->{'config'}{$podcast} || return;
+    my $config = $self->_parse_conf( $file );
 
     my ($mday,$mon,$year) = (localtime(time() - ($self->{'daysago'} * DAYS)))[3 .. 5];
     $mon++; $year+=1900;
