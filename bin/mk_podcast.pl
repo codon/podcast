@@ -11,6 +11,7 @@ use WWW::Curl::Easy qw(
     CURLOPT_TIMEOUT
     CURLOPT_WRITEDATA
     CURLOPT_URL
+    CURLOPT_FOLLOWLOCATION
 );
 
 use MyPodcasts;
@@ -70,6 +71,7 @@ sub capture_stream {
     $curl->setopt(CURLOPT_TIMEOUT,$podcast->{'duration'});   # how long to capture the stream (in seconds)
     $curl->setopt(CURLOPT_WRITEDATA,$mp3);                   # where to write the data
     $curl->setopt(CURLOPT_URL,$podcast->{'source'});         # the url to capture
+    $curl->setopt(CURLOPT_FOLLOWLOCATION,1);                 # follow Location: header redirects
 
     # make the call
     my $rc = $curl->perform();
