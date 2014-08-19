@@ -7,7 +7,7 @@ use File::Copy;
 
 use XML::RSS;
 use MP3::Tag;
-use LWP::Simple;
+use LWP::Simple qw(get);
 use Lingua::EN::NameCase qw( nc ) ;
 use File::Path qw(mkpath);
 
