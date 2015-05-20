@@ -130,7 +130,7 @@ sub build_RSS {
     if ( -e $config{'rss_file'} and -s $config{'rss_file'} > 0 ) {
         copy( $config{'rss_file'}, "$config{'rss_file'}.bak" );
         $rss->parsefile($config{'rss_file'});
-        if (@{$rss->{'items'}} == 5) {
+        while (@{$rss->{'items'}} >= 5) {
             my $last_item = pop(@{$rss->{'items'}});
             my $url = $last_item->{'enclosure'}->{'url'} || '';
             $url =~ s[^$self->{'baseurl'}][$self->{'basedir'}/];
