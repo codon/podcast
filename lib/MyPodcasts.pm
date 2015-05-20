@@ -134,7 +134,12 @@ sub build_RSS {
             my $last_item = pop(@{$rss->{'items'}});
             my $url = $last_item->{'enclosure'}->{'url'} || '';
             $url =~ s[^$self->{'baseurl'}][$self->{'basedir'}/];
-            unlink $url if ( -e $url );
+            if ( -e $url ) {
+                unlink $url || warn "failed to unlink '$url': $!\n";
+            }
+            else {
+                warn "cannot unlink '$url': path does not exist\n";
+            }
         }
     }
     else {
