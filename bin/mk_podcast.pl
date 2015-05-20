@@ -76,13 +76,13 @@ sub capture_stream {
     # make the call
     my $rc = $curl->perform();
 
-    if ( 28 == $rc ) { # expect a timeout; this is a continuous stream we're grabbing...
+    if ( 0 == $rc || 28 == $rc ) { # expect a timeout; this is a continuous stream we're grabbing...
         # ok
         $podcast->add_ID3_tag( $daysago );
     }
     else {
         # problems XXX TBD Better error handling?
-        $curl->strerror($rc);
+        warn "libCurl returned [$rc]: ".$curl->strerror($rc);
     }
 
     return;
