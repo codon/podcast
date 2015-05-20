@@ -168,6 +168,7 @@ sub build_RSS {
             'length' => $size,
         },
         mode        => 'insert',
+        pubDate     => get_pubDate(),
     );
 
     if (scalar @{ $rss->{'items'} || [] } > 1) {
