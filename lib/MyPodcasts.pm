@@ -228,7 +228,7 @@ sub add_Lyrics {
 sub get_pubDate {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
     # pubDate should be of the format: Sat, 9 Jun 2007 17:00:00 -0700
-    return sprintf('%3s, %d %s %4d %02d:%02d:%02d -0700',
+    return sprintf('%.3s, %d %.3s %4d %02d:%02d:%02d -0700',
         $day{$wday}, $mday, $month{++$mon}, ($year + 1900), $hour, $min, $sec );
 }
 
